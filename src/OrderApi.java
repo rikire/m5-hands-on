@@ -37,6 +37,11 @@ public class OrderApi {
      * <p>{@code customerId} is not checked against any customer registry and
      * is stored exactly as sent, without trimming.
      *
+     * <p>This method throws no exceptions: invalid input gets a 400 response.
+     * TODO: errors from request-body deserialization (malformed JSON, a
+     * non-numeric amount) happen before this method runs; how they are mapped
+     * to HTTP responses is not visible in this code.
+     *
      * @param req the order to create ({@link OrderDto}); must not be
      *            {@code null}. {@code req.customerId()} must be non-null and
      *            not blank. {@code req.amount()} must be non-null and strictly
@@ -47,10 +52,6 @@ public class OrderApi {
      *         {@code id} and status {@code "NEW"}; or {@code 400 Bad Request}
      *         with a {@code null} body if any of the conditions on
      *         {@code req} is not met. No {@code Location} header is set.
-     * @throws TODO exceptions raised by request-body deserialization (for
-     *         example malformed JSON or a non-numeric amount) happen outside
-     *         this method, and their mapping to HTTP responses is not visible
-     *         in this code.
      */
     @PostMapping
     public ResponseEntity<OrderDto> create(@RequestBody OrderDto req) {
