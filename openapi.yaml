@@ -1,0 +1,151 @@
+openapi: 3.0.3
+info:
+  title: Orders API
+  version: 0.1.0
+  description: |
+    Generated from OrderApi (with OrderDto, Order, OrderService).
+    Note: the project compiles OrderApi against local stand-ins for Spring (SpringStubs.java),
+    and nothing there serves HTTP. This spec describes the intended HTTP contract.
+    # TODO: nothing here was checked against a running server. Framework behaviour (JSON
+    #       serialisation of BigDecimal, error bodies produced by the framework) is assumed.
+paths:
+  /orders:
+    get:
+      operationId: listOrders
+      # TODO: no JavaDoc on list(); this summary comes from the code.
+      summary: List all orders
+      description: |
+        Returns every stored order. There is no pagination, filtering or sorting.
+        The order of the items is not defined (they come from ConcurrentHashMap.values()).
+      responses:
+        '200':
+          description: All orders; an empty array when there are none.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderDto'
+    post:
+      operationId: createOrder
+      summary: Create a new order for a customer and return it.
+      description: |
+        Only `customerId` and `amount` are read from the request. Any `id` or `status` the
+        client sends is ignored: the server always assigns a new unique id and the initial
+        status "NEW". The call is not idempotent: each successful call creates a separate
+        order, even when the request is identical to an earlier one.
+        `customerId` is not checked against any customer registry and is stored exactly as
+        sent, without trimming. No `Location` header is set.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderDto'
+            example:
+              customerId: "c-42"
+              amount: 19.99
+      responses:
+        '201':
+          description: The created order, with a generated id and status "NEW".
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDto'
+        '400':
+          description: |
+            The body is missing, `customerId` is null or blank, or `amount` is null or <= 0.
+            The response has no body.
+          # TODO: errors from request-body deserialization (malformed JSON, a non-numeric
+          #       amount) happen before create() runs. How they map to HTTP responses (status
+          #       code, error body shape) is not visible in this code.
+  /orders/{id}:
+    parameters:
+      - $ref: '#/components/parameters/OrderId'
+    get:
+      operationId: getOrder
+      # TODO: no JavaDoc on get(); this summary comes from the code.
+      summary: Get an order by id
+      responses:
+        '200':
+          description: The order.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDto'
+        '404':
+          description: No order with this id (exact, case-sensitive match). The response has no body.
+  /orders/{id}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/OrderId'
+    post:
+      operationId: cancelOrder
+      # TODO: no JavaDoc on cancel(); this summary comes from the code.
+      summary: Cancel an order
+      description: |
+        Sets the order's status to "CANCELLED". Any status other than "CANCELLED" can be
+        cancelled (the code has no other state rules). There is no request body.
+        Not idempotent in its response: the first call returns 200, and repeat calls return 409.
+      # TODO: the 404 check and the cancel are two separate store accesses, not one atomic
+      #       step. With the current service (no delete operation) this cannot produce a wrong
+      #       result, but the contract is not guaranteed if a delete is added later.
+      responses:
+        '200':
+          description: |
+            The order after cancellation (status "CANCELLED"). This depends on OrderService
+            changing the same in-memory Order object that the controller already holds.
+          # TODO: if OrderService stops returning the stored instance (e.g. a DB-backed
+          #       copy), this response would show the status from before the cancel.
+          #       Confirm the intended contract.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDto'
+        '404':
+          description: No order with this id. The response has no body.
+        '409':
+          description: The order is already cancelled. The response has no body.
+components:
+  parameters:
+    OrderId:
+      name: id
+      in: path
+      required: true
+      description: Order id. Server-generated ids are UUIDs, but any string is accepted and simply looked up.
+      schema:
+        type: string
+  schemas:
+    OrderDto:
+      type: object
+      description: |
+        Used for both the request and the response. In requests, `id` and `status` are
+        ignored (readOnly). In responses, all four fields are always present.
+      required: [id, customerId, amount, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Server-generated (UUID.randomUUID()).
+        customerId:
+          type: string
+          pattern: '\S'
+          description: |
+            Must contain at least one non-whitespace character. Stored as sent, without
+            trimming. Not checked against any customer registry.
+          # TODO: Java isBlank() uses Character.isWhitespace, which does not exactly match
+          #       the regex \s used by some validators (e.g. for non-breaking space U+00A0).
+        amount:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          description: Strictly greater than zero. No upper limit or scale limit (Java BigDecimal).
+          # TODO: a JSON number may lose precision in clients that parse it as a double.
+          #       Decide whether amounts should be sent as strings.
+        status:
+          type: string
+          readOnly: true
+          description: '"NEW" on creation, "CANCELLED" after a successful cancel.'
+          # TODO: status is a free-form String in Order, not an enum. The code sets only these
+          #       two values; confirm whether an enum [NEW, CANCELLED] is the intended contract.
+          example: NEW
