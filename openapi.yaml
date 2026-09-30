@@ -2,6 +2,8 @@ openapi: 3.0.3
 info:
   title: Orders API
   version: 0.1.0
+  license:
+    name: MIT
   description: |
     Generated from OrderApi (with OrderDto, Order, OrderService).
     Note: the project compiles OrderApi against local stand-ins for Spring (SpringStubs.java),
