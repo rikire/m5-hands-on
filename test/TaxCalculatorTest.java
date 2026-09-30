@@ -245,4 +245,17 @@ public class TaxCalculatorTest {
         // Assert
         assertTrue(eligible, "a 35-year-old earning 8 lakh must file a return");
     }
+
+    // Kills PIT mutant L70 `ageYears < 0` -> `ageYears <= 0` (see PROMPTS.md 5A Part D)
+    @Test
+    public void isEligibleForReturn_ageZeroAboveThreshold_returnsTrue() {
+        // Arrange
+        TaxCalculator calc = new TaxCalculator();
+
+        // Act
+        boolean eligible = calc.isEligibleForReturn(new BigDecimal("300000"), 0);
+
+        // Assert
+        assertTrue(eligible);
+    }
 }
