@@ -6,8 +6,8 @@ info:
     Generated from OrderApi (with OrderDto, Order, OrderService).
     Note: the project compiles OrderApi against local stand-ins for Spring (SpringStubs.java),
     and nothing there serves HTTP. This spec describes the intended HTTP contract.
-    # TODO: nothing here was checked against a running server. Framework behaviour (JSON
-    #       serialisation of BigDecimal, error bodies produced by the framework) is assumed.
+# TODO: nothing here was checked against a running server. Framework behaviour (JSON
+#       serialisation of BigDecimal, error bodies produced by the framework) is assumed.
 paths:
   /orders:
     get:
@@ -26,6 +26,10 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/OrderDto'
+        '4XX':
+          description: |
+            list() itself never returns a client error. This covers errors the web
+            framework produces before the method runs (e.g. an unsupported Accept header).
     post:
       operationId: createOrder
       summary: Create a new order for a customer and return it.
