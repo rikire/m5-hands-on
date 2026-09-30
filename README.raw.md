@@ -1,6 +1,6 @@
-# m5-hands-on
+# m5-pub
 
-A small Java library with a simplified Indian income-tax/GST calculator and an in-memory order store exposed through a Spring-style controller that isn't wired to a real web server.
+Java 17 teaching project: a simplified Indian income-tax and GST calculator (`TaxCalculator`) with JUnit 5 tests, plus an in-memory order service (`OrderService`) behind a REST-style controller (`OrderApi`) that uses stand-in Spring annotations and does not run as a web server.
 
 ## Description
 
@@ -14,7 +14,7 @@ A small Java library with a simplified Indian income-tax/GST calculator and an i
 - `OrderApi`: a controller mapped to `/orders`:
   - `GET /orders`
   - `GET /orders/{id}`: 404 if not found
-  - `POST /orders`: 201 with the new order; 400 if the body is missing, `customerId` is null or blank, or `amount` is null or `<= 0`
+  - `POST /orders`: 201; 400 if `customerId` is blank or `amount <= 0`
   - `POST /orders/{id}/cancel`: 404 if not found, 409 if already cancelled
 
   The annotations and `ResponseEntity` are minimal stand-ins in `src/SpringStubs.java`. Spring is not on the classpath, so nothing serves these endpoints over HTTP.
@@ -35,7 +35,7 @@ make clean       # delete build/, libs/, coverage/, jacoco.exec
 
 ## Quick example
 
-There is no `main` method. All classes are in the default package, so the calling code has to be in the default package too, the way the tests are. Put these lines inside any method (or paste them into `jshell --class-path build` after `make build`). The same inputs are used in the tests.
+There is no `main` method. All classes are in the default package, so the calling code has to be in the default package too, the way the tests are. The expected values below are taken from the existing tests.
 
 ```java
 import java.math.BigDecimal;
@@ -50,7 +50,7 @@ c.isEligibleForReturn(new BigDecimal("300000"), 60); // false (limit is 3,00,000
 
 ## Contributing
 
-Work on a branch and open a pull request against `main`. Before opening it, `make test` must pass; if you touch `TaxCalculator`, also run `make coverage` and `make mutation` and say in the PR how the numbers changed.
+TODO
 
 ## License
 
