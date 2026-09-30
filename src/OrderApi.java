@@ -25,6 +25,33 @@ public class OrderApi {
         return ResponseEntity.ok(OrderDto.from(o.get()));
     }
 
+    /**
+     * Create a new order for a customer and return it.
+     *
+     * <p>Only {@code customerId} and {@code amount} are read from the request.
+     * Any {@code id} or {@code status} the client sends is ignored: the server
+     * always assigns a new unique id and the initial status {@code "NEW"}.
+     * The call is not idempotent, so each successful call creates a separate
+     * order, even when the request is identical to an earlier one.
+     *
+     * <p>{@code customerId} is not checked against any customer registry and
+     * is stored exactly as sent, without trimming.
+     *
+     * @param req the order to create ({@link OrderDto}); must not be
+     *            {@code null}. {@code req.customerId()} must be non-null and
+     *            not blank. {@code req.amount()} must be non-null and strictly
+     *            greater than zero. There is no upper limit or scale limit
+     *            on the amount.
+     * @return a response with status {@code 201 Created} whose body is the
+     *         created order as an {@link OrderDto}, including its generated
+     *         {@code id} and status {@code "NEW"}; or {@code 400 Bad Request}
+     *         with a {@code null} body if any of the conditions on
+     *         {@code req} is not met. No {@code Location} header is set.
+     * @throws TODO exceptions raised by request-body deserialization (for
+     *         example malformed JSON or a non-numeric amount) happen outside
+     *         this method, and their mapping to HTTP responses is not visible
+     *         in this code.
+     */
     @PostMapping
     public ResponseEntity<OrderDto> create(@RequestBody OrderDto req) {
         if (req == null || req.customerId() == null || req.customerId().isBlank()
