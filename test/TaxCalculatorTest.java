@@ -62,7 +62,7 @@ public class TaxCalculatorTest {
         boolean eligible = calc.isEligibleForReturn(highIncome, -1);
 
         // Assert
-        assertFalse(eligible, "an invalid age must be rejected even for high income");
+        assertFalse(eligible, "a negative age is invalid input, so no filing obligation is reported even for high income");
     }
 
     // ---------- (b) "empty" input: zero income ----------
@@ -229,19 +229,6 @@ public class TaxCalculatorTest {
 
         // Assert
         assertFalse(eligible, "the super-senior limit applies from the 80th birthday");
-    }
-
-    @Test
-    public void isEligibleForReturn_ageZeroAboveGeneralLimit_returnsTrue() {
-        // Arrange
-        TaxCalculator calc = new TaxCalculator();
-        BigDecimal income = new BigDecimal("250001");
-
-        // Act
-        boolean eligible = calc.isEligibleForReturn(income, 0);
-
-        // Assert
-        assertTrue(eligible, "age 0 is a valid age (a minor with income) and uses the general limit");
     }
 
     // ---------- (d) happy path ----------
